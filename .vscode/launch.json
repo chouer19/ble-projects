@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ble: Debug hello_nrf52840 (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/projects/hello_nrf52840/build/zephyr/zephyr.elf",
+      "servertype": "jlink",
+      "device": "nRF52840_xxAA",
+      "interface": "swd",
+      "runToEntryPoint": "main",
+      "preLaunchTask": "ble: build"
+    },
+    {
+      "name": "ble: Attach (J-Link)",
+      "type": "cortex-debug",
+      "request": "attach",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/projects/hello_nrf52840/build/zephyr/zephyr.elf",
+      "servertype": "jlink",
+      "device": "nRF52840_xxAA",
+      "interface": "swd"
+    }
+  ]
+}

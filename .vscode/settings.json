@@ -1,0 +1,16 @@
+{
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+  "C_Cpp.default.configurationProvider": "ms-vscode.cpptools",
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}",
+    "--header-insertion=never"
+  ],
+  "files.associations": {
+    "*.overlay": "dts",
+    "prj.conf": "properties"
+  },
+  "files.exclude": {
+    "**/sdk/ncs/modules": true,
+    "**/sdk/ncs/zephyr/subsys": false
+  }
+}

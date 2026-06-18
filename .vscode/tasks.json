@@ -1,0 +1,53 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ble: setup",
+      "type": "shell",
+      "command": "make setup",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "ble: build",
+      "type": "shell",
+      "command": "make build PROJECT=${input:bleProject}",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "ble: flash",
+      "type": "shell",
+      "command": "make flash-direct PROJECT=${input:bleProject}",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "ble: compile_commands",
+      "type": "shell",
+      "command": "make compile_commands PROJECT=${input:bleProject}",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "ble: clean",
+      "type": "shell",
+      "command": "make clean PROJECT=${input:bleProject}",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "none",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "bleProject",
+      "type": "promptString",
+      "description": "Project name under projects/",
+      "default": "hello_nrf52840"
+    }
+  ]
+}

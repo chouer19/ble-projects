@@ -1,0 +1,14 @@
+# ── 环境搭建（体积大，本地 make setup 初始化，勿提交） ──
+sdk/
+toolchains/
+
+# ── 编译产物 ──
+projects/*/build/
+compile_commands.json
+projects/*/compile_commands.json
+
+# ── 编辑器 / 系统 ──
+*.swp
+*.swo
+.vscode/*.log
+.DS_Store

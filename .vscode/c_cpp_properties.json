@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "name": "ble-projects",
+      "compileCommands": "${workspaceFolder}/compile_commands.json",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-arm",
+      "compilerPath": "${workspaceFolder}/toolchains/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc"
+    }
+  ],
+  "version": 4
+}

@@ -1,0 +1,19 @@
+/*
+ * spider: PCA9685 16 通道 PWM 驱动板挂载在 I2C0
+ *
+ * nRF52840 DK 的 i2c0 默认引脚即 P0.26 (SDA) / P0.27 (SCL)，
+ * 与实际接线一致，无需重映射 pinctrl。
+ * PCA9685 地址引脚 A0-A5 全接 GND => 0x40。
+ */
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <100000>;
+
+	pca9685: pca9685@40 {
+		compatible = "nxp,pca9685-pwm";
+		reg = <0x40>;
+		#pwm-cells = <2>;
+		status = "okay";
+	};
+};
