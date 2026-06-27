@@ -5,7 +5,7 @@
 ## 快速开始
 
 ```bash
-cd /Users/chouer/Code/ble-projects
+cd ble-projects
 
 # 首次（若 sdk/ 与 toolchains/ 已从 rover 复制可跳过）
 make setup
@@ -27,7 +27,8 @@ make compile_commands
 | 项目 | 说明 |
 |------|------|
 | [projects/hello_nrf52840](projects/hello_nrf52840) | 最小可运行固件：LED 闪烁、UART 输出、BLE 广播 |
-| [projects/spider](projects/spider) | **8DOF Mini-Kame 四足机器人**：PCA9685 舵机控制 + Kame Motion Framework（离散步态、UART Shell 动作命令） |
+| [projects/spider](projects/spider) | **8DOF Mini-Kame 四足**：PCA9685 舵机 + Kame Motion + **BLE 遥控** |
+| [projects/spider-remote-ios](projects/spider-remote-ios) | **SpiderRemote** iOS/iPad App（CoreBluetooth → `SpiderBod`） |
 
 ### hello_nrf52840
 
@@ -35,15 +36,27 @@ make compile_commands
 - UART `printk` 输出
 - BLE 不可连接广播（设备名 `Hello_nRF52840`）
 
-### spider
+### spider + SpiderRemote（当前主力项目）
 
 ```bash
+# 固件：编译与烧录
 make build PROJECT=spider
 make flash-direct PROJECT=spider
-# 串口 115200：stand / forward / lift L1 / stop …
+
+# 串口 115200
+screen /dev/cu.usbmodem<序列号>1 115200
+
+# 手机/iPad 遥控
+open projects/spider-remote-ios/SpiderRemote.xcodeproj
 ```
 
-详见 [projects/spider/README.md](projects/spider/README.md)。
+| 控制方式 | 说明 |
+|----------|------|
+| UART Shell | `stand` / `forward` / `stop` / `speed` / `spider scan` … |
+| BLE | 广播名 `SpiderBod`，GATT 写 cmd 帧 |
+| SpiderRemote App | iOS/iPad 15.0+，点按遥控（**iPad 已实机验证**） |
+
+**一站式操作手册**：[projects/spider/docs/operations-guide.md](projects/spider/docs/operations-guide.md)
 
 ## 文档
 
@@ -52,9 +65,11 @@ make flash-direct PROJECT=spider
 | [docs/setup.md](docs/setup.md) | 环境配置、编译、烧录、调试、新建项目 |
 | [docs/rover-analysis.md](docs/rover-analysis.md) | rover 工程结构与迁移分析 |
 | [docs/knowledge/nrf52840-pca9685-wiring.md](docs/knowledge/nrf52840-pca9685-wiring.md) | nRF52840 ↔ PCA9685 I2C 连线 |
-| [projects/spider/README.md](projects/spider/README.md) | Mini-Kame 四足机器人固件（入口） |
-| [projects/spider/docs/kame-motion-framework.md](projects/spider/docs/kame-motion-framework.md) | Kame 动作框架与串口命令 |
-| [projects/spider/docs/kame-servo-calibration.md](projects/spider/docs/kame-servo-calibration.md) | 8 路舵机标定记录 |
+| [projects/spider/docs/operations-guide.md](projects/spider/docs/operations-guide.md) | **spider 操作总览**（编译/烧录/命令/BLE/App） |
+| [projects/spider/README.md](projects/spider/README.md) | spider 固件入口 |
+| [projects/spider/docs/progress.md](projects/spider/docs/progress.md) | 里程碑与变更日志 |
+| [projects/spider/docs/ble-remote-design.md](projects/spider/docs/ble-remote-design.md) | BLE 协议规格 |
+| [projects/spider-remote-ios/docs/ios-getting-started.md](projects/spider-remote-ios/docs/ios-getting-started.md) | iPhone/iPad App 部署教程 |
 
 ## 默认版本
 
@@ -75,7 +90,7 @@ make build PROJECT=my_app
 ```
 sdk/ncs/          ← 共享 NCS（勿手改，用 west 管理）
 toolchains/       ← 共享编译器 + nrfutil
-projects/         ← 各应用固件
+projects/         ← 各应用固件 + spider-remote-ios
 templates/        ← 项目模板
 scripts/          ← 初始化与构建脚本
 ```

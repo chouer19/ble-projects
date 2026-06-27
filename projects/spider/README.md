@@ -1,10 +1,16 @@
 # spider
 
-**8DOF Mini-Kame 四足机器人**固件：nRF52840 通过 I2C 驱动 PCA9685，UART Shell 交互控制 8 路舵机，内置 **Kame Motion Framework** 实现离散步态与整机动作。
+**8DOF Mini-Kame 四足机器人**固件：nRF52840 通过 I2C 驱动 PCA9685，UART Shell + **BLE 遥控**控制 8 路舵机，内置 **Kame Motion Framework** 实现离散步态与整机动作。
+
+手机遥控 App：**SpiderRemote**（`projects/spider-remote-ios/`），连接广播名 **SpiderBod**。支持 **iPhone / iPad**（iOS 15.0+）；iPad BLE 遥控已于 2026-06-25 实机验证。
+
+**日常操作总览**：[docs/operations-guide.md](docs/operations-guide.md)（编译、烧录、串口/BLE/App 命令）
 
 ---
 
 ## 快速开始
+
+### 固件
 
 ```bash
 # 工作区根目录
@@ -15,7 +21,17 @@ make flash-direct PROJECT=spider
 screen /dev/cu.usbmodem<序列号>1 115200
 ```
 
-上电后若 PCA9685 在线，固件**自动执行 `stand`** 复位到标准站姿。
+上电后若 PCA9685 在线，固件**自动执行 `stand`** 复位到标准站姿，并开始 BLE 可连接广播（设备名 `SpiderBod`）。
+
+### 手机遥控（首次请读教程）
+
+完整步骤（Xcode 安装、Apple ID 签名、真机部署、联调测试）：
+
+**[projects/spider-remote-ios/docs/ios-getting-started.md](../spider-remote-ios/docs/ios-getting-started.md)**
+
+```bash
+open projects/spider-remote-ios/SpiderRemote.xcodeproj
+```
 
 ---
 
@@ -89,6 +105,28 @@ PCA9685 地址 A0-A5 全接 GND → **0x40**。通道映射见 [docs/kame-servo-
 
 ---
 
+## BLE 遥控
+
+| 项 | 值 |
+|----|-----|
+| 广播名 | `SpiderBod` |
+| Service UUID | `A0010001-0000-1000-8000-00805F9B34FB` |
+| Characteristic `cmd` | `A0010002-0000-1000-8000-00805F9B34FB` |
+| 写入方式 | Write Without Response（1–3 字节小端帧） |
+
+常用 hex（nRF Connect 自测）：
+
+| 操作 | Hex |
+|------|-----|
+| Forward | `01 06 FF` |
+| Stop | `02` |
+| 动作节拍 800 ms | `10 20 03` |
+| 舵机转速 240 °/s | `11 F0 00` |
+
+Shell 与 BLE **后到的命令生效**；BLE 断连自动立正。协议详见 [docs/ble-remote-design.md](docs/ble-remote-design.md)。
+
+---
+
 ## 建议测试顺序
 
 ```text
@@ -112,7 +150,21 @@ stop
 # 5. 步态
 forward
 stop
+
+# 6. BLE（可选，需 nRF Connect 或 SpiderRemote App）
+# nRF Connect 向 cmd 写 01 06 FF → 应开始前进
 ```
+
+### BLE + 串口并行联调
+
+```text
+# 手机点 Forward 的同时，串口观察：
+stop                  # 应立刻打断 BLE forward
+
+# 或串口 forward，手机点 Stop
+```
+
+测试清单见 [docs/ble-remote-design.md](docs/ble-remote-design.md) §9。
 
 一键站立（8 通道）：
 
@@ -126,23 +178,35 @@ spider multi 1:130 11:40 2:75 12:140 3:145 13:40 4:75 14:140
 
 ```
 projects/spider/
-├── boards/nrf52840dk_nrf52840.overlay   # I2C0 + PCA9685
+├── boards/nrf52840dk_nrf52840.overlay
 ├── include/
-│   ├── kame_servo_cal.h                 # 舵机标定 API
-│   ├── kame_pose.h                      # Pose 抽象
-│   └── kame_motion.h                    # Motion FSM API
+│   ├── kame_servo_cal.h
+│   ├── kame_pose.h
+│   ├── kame_motion.h
+│   ├── spider_ble_protocol.h          # BLE UUID / Opcode
+│   ├── spider_control.h
+│   ├── spider_servo.h
+│   └── ble_remote.h
 ├── src/
-│   ├── main.c                           # Shell + 插值引擎 + 后端
-│   ├── kame_servo_cal.c                 # 标定表
-│   ├── kame_pose.c                      # 姿态构建
-│   └── kame_motion.c                    # 步序表 + FSM
+│   ├── main.c                         # Shell 薄封装 + main()
+│   ├── spider_control.c               # 统一命令分发
+│   ├── spider_servo.c                 # 舵机插值后端
+│   ├── ble_remote.c                   # BLE GATT
+│   ├── kame_servo_cal.c
+│   ├── kame_pose.c
+│   └── kame_motion.c
 ├── docs/
-│   ├── architecture.md                  # 软件架构
-│   ├── progress.md                      # 开发进度
-│   ├── kame-motion-framework.md         # 动作框架详解
-│   └── kame-servo-calibration.md        # 舵机标定记录
+│   ├── architecture.md
+│   ├── progress.md
+│   ├── ble-remote-design.md
+│   ├── operations-guide.md            # 操作手册（编译/烧录/遥控）
+│   ├── kame-motion-framework.md
+│   └── kame-servo-calibration.md
 ├── prj.conf
 └── CMakeLists.txt
+
+projects/spider-remote-ios/            # iOS 遥控 App
+└── docs/ios-getting-started.md        # 真机部署教程
 ```
 
 ---
@@ -151,10 +215,13 @@ projects/spider/
 
 | 文档 | 内容 |
 |------|------|
+| [docs/operations-guide.md](docs/operations-guide.md) | **操作手册**：编译烧录、命令、BLE、App |
 | [docs/architecture.md](docs/architecture.md) | 分层架构、线程模型、扩展指南 |
 | [docs/progress.md](docs/progress.md) | 里程碑、已知限制、待办 |
 | [docs/kame-motion-framework.md](docs/kame-motion-framework.md) | 动作命令、步态原理、可调参数 |
 | [docs/kame-servo-calibration.md](docs/kame-servo-calibration.md) | 8 路舵机标定数据与测试记录 |
+| [docs/ble-remote-design.md](docs/ble-remote-design.md) | BLE 协议与实施阶段 |
+| [iOS 入门教程](../spider-remote-ios/docs/ios-getting-started.md) | Xcode、签名、真机部署与联调 |
 
 ---
 
@@ -173,6 +240,9 @@ projects/spider/
 - ✅ PCA9685 驱动 + Shell 调试完整可用
 - ✅ 8 路舵机标定完成
 - ✅ Kame Motion Framework：静态姿态 + 步态 + 单腿动作
+- ✅ 固件 BLE 遥控（`SpiderBod`）+ SpiderRemote iOS/iPad App
+- ✅ **iPad 真机 BLE 遥控验证通过**（2026-06-25）
 - 🔄 实机步态/三脚架参数微调进行中
+- ⏳ §9 完整测试表 T1–T9 书面记录
 
 详见 [docs/progress.md](docs/progress.md)。

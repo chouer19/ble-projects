@@ -133,6 +133,16 @@ NRFUTIL_SERIAL=<贴纸序列号> make flash-direct
 2. 系统 `nrfjprog`（Nordic Command Line Tools）
 3. 系统 `JLinkExe`
 
+### spider 四足机器人
+
+```bash
+make build PROJECT=spider
+make flash-direct PROJECT=spider
+screen /dev/cu.usbmodem<序列号>1 115200
+```
+
+操作命令、BLE 协议、iPad/iPhone App 部署见 [projects/spider/docs/operations-guide.md](../projects/spider/docs/operations-guide.md)。
+
 ---
 
 ## 调试

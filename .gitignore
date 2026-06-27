@@ -12,3 +12,8 @@ projects/*/compile_commands.json
 *.swo
 .vscode/*.log
 .DS_Store
+
+# ── Xcode 用户数据（勿提交） ──
+*.xcuserdatad/
+*.xcuserstate
+project.xcworkspace/xcuserdata/

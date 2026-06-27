@@ -1,0 +1,306 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000010000000000000001 /* SpiderRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000001 /* SpiderRemoteApp.swift */; };
+		A10000010000000000000002 /* SpiderBLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000002 /* SpiderBLEConstants.swift */; };
+		A10000010000000000000003 /* SpiderBLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000003 /* SpiderBLEManager.swift */; };
+		A10000010000000000000004 /* SpiderMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000004 /* SpiderMotion.swift */; };
+		A10000010000000000000005 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000005 /* RootView.swift */; };
+		A10000010000000000000006 /* ConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000006 /* ConnectionView.swift */; };
+		A10000010000000000000007 /* RemoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000007 /* RemoteView.swift */; };
+		A10000010000000000000008 /* SpeedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000008 /* SpeedSettingsView.swift */; };
+		A10000010000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000009 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000020000000000000001 /* SpiderRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiderRemoteApp.swift; sourceTree = "<group>"; };
+		A10000020000000000000002 /* SpiderBLEConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiderBLEConstants.swift; sourceTree = "<group>"; };
+		A10000020000000000000003 /* SpiderBLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiderBLEManager.swift; sourceTree = "<group>"; };
+		A10000020000000000000004 /* SpiderMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiderMotion.swift; sourceTree = "<group>"; };
+		A10000020000000000000005 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		A10000020000000000000006 /* ConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionView.swift; sourceTree = "<group>"; };
+		A10000020000000000000007 /* RemoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteView.swift; sourceTree = "<group>"; };
+		A10000020000000000000008 /* SpeedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedSettingsView.swift; sourceTree = "<group>"; };
+		A10000020000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A10000020000000000000010 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000030000000000000001 /* SpiderRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpiderRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000040000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000050000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A10000050000000000000002 /* SpiderRemote */,
+				A10000050000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000050000000000000002 /* SpiderRemote */ = {
+			isa = PBXGroup;
+			children = (
+				A10000050000000000000004 /* App */,
+				A10000050000000000000005 /* BLE */,
+				A10000050000000000000006 /* Models */,
+				A10000050000000000000007 /* Views */,
+				A10000020000000000000009 /* Assets.xcassets */,
+				A10000020000000000000010 /* Info.plist */,
+			);
+			path = SpiderRemote;
+			sourceTree = "<group>";
+		};
+		A10000050000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000030000000000000001 /* SpiderRemote.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A10000050000000000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000001 /* SpiderRemoteApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A10000050000000000000005 /* BLE */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000002 /* SpiderBLEConstants.swift */,
+				A10000020000000000000003 /* SpiderBLEManager.swift */,
+			);
+			path = BLE;
+			sourceTree = "<group>";
+		};
+		A10000050000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000004 /* SpiderMotion.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A10000050000000000000007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000005 /* RootView.swift */,
+				A10000020000000000000006 /* ConnectionView.swift */,
+				A10000020000000000000007 /* RemoteView.swift */,
+				A10000020000000000000008 /* SpeedSettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000060000000000000001 /* SpiderRemote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000090000000000000001 /* Build configuration list for PBXNativeTarget "SpiderRemote" */;
+			buildPhases = (
+				A10000070000000000000001 /* Sources */,
+				A10000040000000000000001 /* Frameworks */,
+				A10000080000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SpiderRemote;
+			productName = SpiderRemote;
+			productReference = A10000030000000000000001 /* SpiderRemote.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A100000A0000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A10000060000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A10000090000000000000002 /* Build configuration list for PBXProject "SpiderRemote" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A10000050000000000000001;
+			productRefGroup = A10000050000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000060000000000000001 /* SpiderRemote */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000080000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000009 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000070000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000001 /* SpiderRemoteApp.swift in Sources */,
+				A10000010000000000000002 /* SpiderBLEConstants.swift in Sources */,
+				A10000010000000000000003 /* SpiderBLEManager.swift in Sources */,
+				A10000010000000000000004 /* SpiderMotion.swift in Sources */,
+				A10000010000000000000005 /* RootView.swift in Sources */,
+				A10000010000000000000006 /* ConnectionView.swift in Sources */,
+				A10000010000000000000007 /* RemoteView.swift in Sources */,
+				A10000010000000000000008 /* SpeedSettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A100000B0000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A100000B0000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A100000B0000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9QNT3BXF8U;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SpiderRemote/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SpiderRemote;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bleprojects.SpiderRemote;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A100000B0000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9QNT3BXF8U;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SpiderRemote/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SpiderRemote;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bleprojects.SpiderRemote;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000090000000000000001 /* Build configuration list for PBXNativeTarget "SpiderRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A100000B0000000000000003 /* Debug */,
+				A100000B0000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000090000000000000002 /* Build configuration list for PBXProject "SpiderRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A100000B0000000000000001 /* Debug */,
+				A100000B0000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A100000A0000000000000001 /* Project object */;
+}

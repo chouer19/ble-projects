@@ -6,7 +6,7 @@
 
 ## 1. 总体目标
 
-在 nRF52840 + PCA9685 平台上，通过 UART Shell 交互控制 8 路舵机，并实现 **Kame Motion Framework**：离散步态、无 IK、无轨迹规划，适合资源受限的嵌入式环境。
+在 nRF52840 + PCA9685 平台上，通过 **UART Shell** 与 **BLE 遥控** 控制 8 路舵机，并实现 **Kame Motion Framework**：离散步态、无 IK、无轨迹规划，适合资源受限的嵌入式环境。
 
 设计原则：
 
@@ -14,46 +14,57 @@
 - 通道映射与方向语义集中在 `kame_servo_cal`
 - 姿态由「各舵机目标角」直接描述，不做逆运动学
 - 同一时刻只运行一个 Motion；手动舵机命令与 Motion 互斥
+- Shell 与 BLE **只在 `spider_control` 汇合**；不在 `ble_remote.c` 散落运动逻辑
 
 ---
 
 ## 2. 分层架构
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  UART Shell（main.c）                                    │
-│  · 顶层动作命令：stand / forward / lift / wave / stop …  │
-│  · spider 子命令：scan / angle / multi / status …        │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│  kame_motion（FSM + 步序表）                             │
-│  · motions[]：每个 Motion = 若干 Step                     │
-│  · 后台线程：每 motion_step_delay_ms 推进一 Step         │
-│  · 产出 kame_pose_t → kame_pose_apply()                  │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│  kame_pose（静态/单腿/步态 Pose 构建）                    │
-│  · STAND / SPLAY / TRIPOD / LIFT / 步态填充 …            │
-│  · 调用 kame_servo_*_deg() 做定向偏移                    │
-└──────────────────────────┬──────────────────────────────┘
-                           │ kame_servo_apply(servo_id, deg)
-┌──────────────────────────▼──────────────────────────────┐
-│  kame_servo_cal（标定表 + 方向抽象）                      │
-│  · servo_id → 通道 / 范围 / 站立角 / flags               │
-│  · hip_forward / knee_up / knee_top / splay             │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│  main.c 舵机后端 + 50 Hz 插值线程                        │
-│  · deg → 脉宽(500~2500 µs) → pwm_set(pca9685)           │
-│  · 全局速度 spider speed（默认 240°/s）                  │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│  Zephyr PCA9685 PWM 驱动（I2C0 @ 0x40）                  │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  iOS SpiderRemote（projects/spider-remote-ios/）             │
+│  SwiftUI 点按 → CoreBluetooth Write Without Response         │
+└────────────────────────────┬────────────────────────────────┘
+                             │ GATT cmd (A0010002-...)
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│  ble_remote.c                                                │
+│  bt_enable / 广播 SpiderBod / GATT 注册 / Write 回调         │
+│  断连 → spider_control_stop()                                │
+└────────────────────────────┬────────────────────────────────┘
+                             │ spider_control_ble_frame()
+┌────────────────────────────▼────────────────────────────────┐
+│  UART Shell（main.c 薄封装）                                  │
+│  · 顶层动作：stand / forward / stop / speed …                │
+│  · spider 子命令：scan / angle / multi / status …            │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
+│  spider_control                                              │
+│  Motion / Stop / 动作节拍 / 舵机转速                          │
+└──────────────┬─────────────────────────────┬────────────────┘
+               │                             │
+               ▼                             ▼
+┌──────────────────────────┐   ┌─────────────────────────────┐
+│  kame_motion（FSM）       │   │  spider_servo（舵机后端）    │
+│  步序表 + motion 线程     │   │  apply / 50 Hz 插值 / 转速   │
+└──────────────┬───────────┘   └──────────────┬──────────────┘
+               │                              │
+               ▼                              │
+┌──────────────────────────┐                 │
+│  kame_pose               │                 │
+│  静态/步态/三脚架 Pose   │                 │
+└──────────────┬───────────┘                 │
+               │ kame_servo_apply()           │
+               └──────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
+│  kame_servo_cal（标定表 + 方向抽象）                          │
+└────────────────────────────┬────────────────────────────────┘
+                             │ pwm_set(pca9685)
+┌────────────────────────────▼────────────────────────────────┐
+│  Zephyr PCA9685 PWM 驱动（I2C0 @ 0x40）                      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -62,19 +73,25 @@
 
 | 文件 | 职责 |
 |------|------|
-| `src/main.c` | Shell 命令注册、I2C 诊断、50 Hz 插值引擎、`kame_servo_apply()` 实现、上电自动 `stand` |
-| `include/kame_servo_cal.h` + `src/kame_servo_cal.c` | 8 路舵机标定表、角度钳位、方向语义辅助函数 |
-| `include/kame_pose.h` + `src/kame_pose.c` | 腿映射、静态姿态、三脚架/抬腿、Pose 下发 |
-| `include/kame_motion.h` + `src/kame_motion.c` | Motion 枚举、步序表、FSM 后台线程 |
-| `boards/nrf52840dk_nrf52840.overlay` | I2C0 挂载 PCA9685 @ 0x40，100 kHz |
-| `prj.conf` | I2C / PWM / Shell / UART 配置 |
-| `CMakeLists.txt` | 编译上述 4 个 `.c` 源文件 |
+| `src/main.c` | Shell 命令注册、I2C 诊断、上电 `stand`、`spider_ble_init()` |
+| `src/spider_control.c` | 统一命令分发；BLE 帧解析 `spider_control_ble_frame()` |
+| `src/spider_servo.c` | PCA9685 插值引擎、`kame_servo_apply()`、全局 `speed_deg_s` |
+| `src/ble_remote.c` | BLE Peripheral、GATT Service/Characteristic、断连 auto stand |
+| `include/spider_ble_protocol.h` | UUID、Opcode、协议常量（与 iOS 对齐） |
+| `include/kame_servo_cal.h` + `src/kame_servo_cal.c` | 8 路舵机标定表 |
+| `include/kame_pose.h` + `src/kame_pose.c` | 腿映射、姿态构建、Pose 下发 |
+| `include/kame_motion.h` + `src/kame_motion.c` | Motion 枚举、步序表、FSM 线程 |
+| `boards/nrf52840dk_nrf52840.overlay` | I2C0 + PCA9685 @ 0x40 |
+| `prj.conf` | I2C / PWM / Shell / **CONFIG_BT*** |
+| `CMakeLists.txt` | 编译上述 7 个应用 `.c` |
+
+**iOS 配套**：`projects/spider-remote-ios/`（SwiftUI + CoreBluetooth）。
 
 ---
 
 ## 4. 线程模型
 
-固件运行 **2 个应用层后台线程**（另加 Zephyr 系统线程）：
+固件运行 **2 个应用层后台线程**（另加 Zephyr 系统线程与 BLE 栈）：
 
 | 线程 | 栈 | 优先级 | 周期 | 作用 |
 |------|-----|--------|------|------|
@@ -84,9 +101,11 @@
 **两层「速度」概念**：
 
 - `spider speed <deg/s>` — 舵机物理转动速度（插值引擎），默认 240°/s
-- `speed <ms>`（顶层）— Motion 每 Step 之间的等待节拍，默认 500 ms
+- `speed <ms>`（顶层 / BLE `0x10`）— Motion 每 Step 之间的等待节拍，默认 500 ms
 
 若节拍过短而舵机尚未到位就进入下一步，会出现「追不上」现象。
+
+**控制互斥**：Shell 与 BLE 可同时连接；**后到的命令生效**。BLE 断连自动 `spider_control_stop()`。
 
 ---
 
@@ -135,7 +154,7 @@
 ## 6. Motion FSM 生命周期
 
 ```text
-kame_motion_request(id, leg)
+spider_control_motion(id, leg)  /  kame_motion_request(id, leg)
     │
     ├─ 递增 generation（打断旧 Motion）
     ├─ step = 0, active = true
@@ -157,14 +176,27 @@ kame_motion_request(id, leg)
 **打断规则**：
 
 - 新 Motion 请求 → 立即切换
-- `kame_motion_stop()` → 停止推进（手动命令路径会先调用）
+- `spider_control_stop()` / `kame_motion_stop()` → 停止推进（手动命令路径会先调用）
 - 任意 `spider angle/servo/multi/...` 手动命令 → 自动 `kame_motion_stop()`
 
-`stop` 命令等价于 `kame_motion_request(KAME_MOTION_STAND)`，恢复立正。
+`stop` 命令等价于 `spider_control_stop()` → `KAME_MOTION_STAND`。
 
 ---
 
-## 7. 设备树与驱动
+## 7. BLE 概要
+
+| 项 | 值 |
+|----|-----|
+| 广播名 | `SpiderBod` |
+| Service UUID | `A0010001-0000-1000-8000-00805F9B34FB` |
+| Characteristic `cmd` | `A0010002-0000-1000-8000-00805F9B34FB`（Write + Write Without Response） |
+| Notify | 一期不做 |
+
+完整协议见 [ble-remote-design.md](ble-remote-design.md)。
+
+---
+
+## 8. 设备树与驱动
 
 `boards/nrf52840dk_nrf52840.overlay`：
 
@@ -189,7 +221,7 @@ kame_motion_request(id, leg)
 
 ---
 
-## 8. 扩展指南
+## 9. 扩展指南
 
 ### 新增 Motion
 
@@ -197,6 +229,9 @@ kame_motion_request(id, leg)
 2. 在 `kame_motion.c` 实现 `step_*()` 构建函数
 3. 在 `motions[]` 表注册（name / cyclic / needs_leg / steps / build）
 4. 在 `main.c` 用 `SHELL_CMD_ARG_REGISTER` 注册顶层命令
+5. **若需 App 遥控**：更新 `spider_ble_protocol.h` / iOS 常量 / [ble-remote-design.md](ble-remote-design.md) §5.4
+
+Shell 与 BLE 均通过 `spider_control_motion()`，无需两套逻辑。
 
 ### 微调步态/姿态
 
@@ -208,6 +243,6 @@ kame_motion_request(id, leg)
 
 ### 后续可能方向
 
-- BLE 遥控（复用 ble-projects 工作区能力）
+- BLE Notify 状态回传
 - 传感器反馈（IMU 姿态闭环）
 - 更精细的步态参数在线调节（Shell 或 BLE 配置）

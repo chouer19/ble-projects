@@ -10,4 +10,7 @@ target_sources(app PRIVATE
 	src/kame_servo_cal.c
 	src/kame_pose.c
 	src/kame_motion.c
+	src/spider_servo.c
+	src/spider_control.c
+	src/ble_remote.c
 )

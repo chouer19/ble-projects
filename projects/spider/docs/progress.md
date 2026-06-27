@@ -2,7 +2,7 @@
 
 > 记录 Mini-Kame 四足机器人固件的功能里程碑、已验证项、已知限制与待办。
 
-最后更新：2026-06-19
+最后更新：2026-06-25
 
 ---
 
@@ -13,8 +13,10 @@
 | 平台 | nRF52840 DK + PCA9685（16 路 PWM）+ 8× 舵机 |
 | 机器人 | 8DOF Mini-Kame 四足（4 腿 × 2 关节） |
 | 固件框架 | Zephyr / NCS v2.7.0 |
-| 交互方式 | UART Shell（115200，Tab 补全） |
+| 交互方式 | UART Shell（115200）+ BLE 遥控（广播名 `SpiderBod`） |
+| 手机 App | iOS/iPad 15.0+，`projects/spider-remote-ios/`（SpiderRemote） |
 | 动作框架 | Kame Motion Framework（离散步态 + FSM，无 IK） |
+| 日常操作 | [operations-guide.md](operations-guide.md) |
 
 ---
 
@@ -60,6 +62,31 @@
 - [ ] forward / spin 等步态在不同地面上的可靠性验证
 - [ ] 步态参数（GAIT_HIP_DEG / BIAS / LIFT 等）精细微调
 
+### 阶段 E：BLE 遥控 + iOS/iPad App ✅ 首版实机验证通过
+
+**固件**
+
+- [x] 抽出 `spider_servo` / `spider_control`
+- [x] Shell 薄封装，逻辑经 `spider_control` 汇合
+- [x] `ble_remote` + `spider_ble_protocol.h`（GATT、广播 `SpiderBod`）
+- [x] BLE 断连 auto stand
+- [x] `make build PROJECT=spider` 通过
+- [ ] 串口命令全量回归（§3.2，待书面记录）
+
+**SpiderRemote App**
+
+- [x] SwiftUI + CoreBluetooth 工程（iOS 15.0+）
+- [x] RemoteView / SpeedSettingsView / ConnectionView
+- [x] **iPad 真机 BLE 遥控验证**（2026-06-25，效果良好）
+- [ ] iPhone 单独验证（可选，与 iPad 同工程）
+- [ ] §9 测试表 T1–T9 逐项记录
+
+**文档**
+
+- [x] README / architecture / progress / ble-remote-design
+- [x] [operations-guide.md](operations-guide.md) 操作手册
+- [x] [iOS 入门教程](../../spider-remote-ios/docs/ios-getting-started.md)
+
 ---
 
 ## 3. 已移除功能
@@ -77,7 +104,10 @@
 3. **无传感器反馈**：开环控制，地面摩擦/负载变化会影响实际步态
 4. **PCA9685 热插拔**：上电时不在线则驱动初始化失败，需 RESET 后恢复
 5. **同侧腿碰撞**：髋参数过大可能导致 L1↔L2、R1↔R2 相向顶撞，参数已留余量但需实机观察
-6. **双 speed 概念**：`spider speed`（舵机转速）与顶层 `speed`（动作节拍）易混淆
+6. **双 speed 概念**：`spider speed`（舵机转速）与顶层 `speed`（动作节拍）易混淆；App「速度」Tab 已分开展示
+7. **BLE 无状态回传**：一期不做 Notify，无法从手机读当前 Motion
+8. **BLE 动作节拍下限**：手机/BLE 路径限制 100–2000 ms；串口 `speed` 仍允许任意 `>0` 的值
+9. **BLE 单连接**：SpiderRemote 与 nRF Connect 不能同时连接
 
 ---
 
@@ -85,14 +115,16 @@
 
 ### 近期
 
-- [ ] 完成四条腿 lift / wave 实机稳定性测试并记录最优参数
-- [ ] 行走步态在不同 `speed` 节拍下的表现对比
-- [ ] 补充实机测试记录到本文档
+- [ ] 完成 [ble-remote-design.md](ble-remote-design.md) §9 测试表 T1–T9 并更新 [operations-guide.md](operations-guide.md) §11
+- [ ] 继续阶段 D：lift/wave 稳定性、步态地面测试
+- [ ] 步态参数在不同 `speed` 节拍下的对比记录
 
 ### 中期
 
-- [ ] BLE 遥控接口（利用 ble-projects 工作区 BLE 能力）
-- [ ] 动作序列脚本化（预定义组合动作）
+- [ ] BLE Notify 状态回传
+- [ ] App 更多动作按钮（nod / shake / lift 等）
+- [ ] App 自定义 speed 数值输入
+- [ ] 动作序列脚本化
 - [ ] 低功耗待机（舵机 off + 唤醒恢复 stand）
 
 ### 长期
@@ -113,3 +145,7 @@
 | 2026-06 | 三脚架膝侧倾逻辑修正；TRIPOD 参数 20°→25° |
 | 2026-06 | 移除 shift_left / shift_right |
 | 2026-06 | 项目文档整理（architecture / progress / README） |
+| 2026-06-25 | BLE 遥控设计规格 [ble-remote-design.md](ble-remote-design.md) |
+| 2026-06-25 | 固件 BLE + `spider_control` 重构；iOS SpiderRemote 首版 |
+| 2026-06-25 | iOS 最低版本降至 15.0；iPad 真机 BLE 遥控验证通过 |
+| 2026-06-25 | 新增 [operations-guide.md](operations-guide.md) 操作手册 |
