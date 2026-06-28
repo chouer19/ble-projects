@@ -81,7 +81,8 @@
 | `include/kame_servo_cal.h` + `src/kame_servo_cal.c` | 8 路舵机标定表 |
 | `include/kame_pose.h` + `src/kame_pose.c` | 腿映射、姿态构建、Pose 下发 |
 | `include/kame_motion.h` + `src/kame_motion.c` | Motion 枚举、步序表、FSM 线程 |
-| `boards/nrf52840dk_nrf52840.overlay` | I2C0 + PCA9685 @ 0x40 |
+| `boards/nrf52840dk_nrf52840.overlay` | DK：I2C0 + PCA9685 @ 0x40（P0.26/P0.27） |
+| `boards/xiao_ble.overlay` | XIAO BLE：I2C1 + PCA9685 @ 0x40（D4/D5） |
 | `prj.conf` | I2C / PWM / Shell / **CONFIG_BT*** |
 | `CMakeLists.txt` | 编译上述 7 个应用 `.c` |
 
@@ -198,7 +199,9 @@ spider_control_motion(id, leg)  /  kame_motion_request(id, leg)
 
 ## 8. 设备树与驱动
 
-`boards/nrf52840dk_nrf52840.overlay`：
+应用代码通过 `DT_NODELABEL(pca9685)` / `DT_BUS(...)` 访问硬件；**引脚差异仅在各板 overlay 中定义**。
+
+**DK** — `boards/nrf52840dk_nrf52840.overlay`（I2C0）：
 
 ```dts
 &i2c0 {
@@ -213,7 +216,18 @@ spider_control_motion(id, leg)  /  kame_motion_request(id, leg)
 };
 ```
 
-- I2C0 默认引脚 P0.26 (SDA) / P0.27 (SCL)，与 DK Arduino 排针对齐
+**XIAO BLE** — `boards/xiao_ble.overlay`（I2C1，D4/D5 = P0.4/P0.5）：
+
+```dts
+&i2c1 {
+    status = "okay";
+    clock-frequency = <100000>;
+    pca9685: pca9685@40 { /* 同上 */ };
+};
+```
+
+- DK：I2C0 默认 P0.26 (SDA) / P0.27 (SCL)
+- XIAO：勿用 P0.26 作 SDA（板载红灯）；PCA9685 接 D4/D5
 - 舵机 PWM 50 Hz，脉宽 500~2500 µs 线性映射 0~180°
 - I2C 扫描用「读 1 字节」探测（nRF52 TWIM 不支持 0 长度传输）
 

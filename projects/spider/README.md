@@ -2,7 +2,7 @@
 
 **8DOF Mini-Kame 四足机器人**固件：nRF52840 通过 I2C 驱动 PCA9685，UART Shell + **BLE 遥控**控制 8 路舵机，内置 **Kame Motion Framework** 实现离散步态与整机动作。
 
-手机遥控 App：**SpiderRemote**（`projects/spider-remote-ios/`），连接广播名 **SpiderBod**。支持 **iPhone / iPad**（iOS 15.0+）；iPad BLE 遥控已于 2026-06-25 实机验证。
+手机遥控 App：**SpiderRemote**（`projects/spider-remote-ios/`），连接广播名 **SpiderBod**。支持 **iPhone / iPad**（iOS 15.0+）；iPad BLE 遥控已于 2026-06-25（DK）、2026-06-28（XIAO BLE Sense）实机验证。
 
 **日常操作总览**：[docs/operations-guide.md](docs/operations-guide.md)（编译、烧录、串口/BLE/App 命令）
 
@@ -13,11 +13,19 @@
 ### 固件
 
 ```bash
-# 工作区根目录
+# 工作区根目录 — 默认 nRF52840 DK
 make build PROJECT=spider
 make flash-direct PROJECT=spider
 
-# 串口（J-Link vcom0，115200）
+# Seeed XIAO BLE（nRF52840）
+make build PROJECT=spider BOARD=xiao_ble
+# 双击 RESET → 出现 XIAO-SENSE 磁盘后：
+make flash-uf2 PROJECT=spider BOARD=xiao_ble
+
+# 串口 Shell
+# DK：J-Link vcom0，115200
+screen /dev/cu.usbmodem<序列号>1 115200
+# XIAO：USB CDC（Type-C 直连 Mac）
 screen /dev/cu.usbmodem<序列号>1 115200
 ```
 
@@ -37,6 +45,10 @@ open projects/spider-remote-ios/SpiderRemote.xcodeproj
 
 ## 硬件接线
 
+同一套 `src/` 支持多块 nRF52840 开发板，引脚差异由 `boards/*.overlay` 描述。
+
+### nRF52840 DK（默认）
+
 ```
 nRF52840 DK           PCA9685
 --------------------------------
@@ -48,9 +60,28 @@ P0.27 (SCL)   ----->  SCL
 舵机信号      <-----  PWM0~15
 ```
 
+板型：`nrf52840dk/nrf52840` · overlay：`boards/nrf52840dk_nrf52840.overlay`
+
+### Seeed XIAO BLE（nRF52840）
+
+```
+XIAO BLE              PCA9685
+--------------------------------
+3V3           ----->  VCC
+GND           ----->  GND
+D4 (SDA)      ----->  SDA   (P0.4)
+D5 (SCL)      ----->  SCL   (P0.5)
+外部 5-6V     ----->  V+
+舵机信号      <-----  PWM0~15
+```
+
+> **勿将 P0.26 作 SDA** — XIAO 上 P0.26 为板载红灯。
+
+板型：`xiao_ble` 或 `xiao_ble/nrf52840/sense` · overlay：`boards/xiao_ble.overlay`
+
 PCA9685 地址 A0-A5 全接 GND → **0x40**。通道映射见 [docs/kame-servo-calibration.md](docs/kame-servo-calibration.md)。
 
-详细连线说明：[docs/knowledge/nrf52840-pca9685-wiring.md](../../docs/knowledge/nrf52840-pca9685-wiring.md)
+详细连线说明（DK）：[docs/knowledge/nrf52840-pca9685-wiring.md](../../docs/knowledge/nrf52840-pca9685-wiring.md)
 
 ---
 
@@ -180,7 +211,12 @@ spider multi 1:130 11:40 2:75 12:140 3:145 13:40 4:75 14:140
 
 ```
 projects/spider/
-├── boards/nrf52840dk_nrf52840.overlay
+├── boards/
+│   ├── nrf52840dk_nrf52840.overlay    # DK：I2C0 P0.26/P0.27
+│   ├── xiao_ble.overlay               # XIAO BLE：I2C1 D4/D5
+│   ├── xiao_ble.conf                  # XIAO USB CDC Shell
+│   ├── xiao_ble_nrf52840_sense.overlay
+│   └── xiao_ble_nrf52840_sense.conf
 ├── include/
 │   ├── kame_servo_cal.h
 │   ├── kame_pose.h

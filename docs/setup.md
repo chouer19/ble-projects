@@ -136,8 +136,14 @@ NRFUTIL_SERIAL=<贴纸序列号> make flash-direct
 ### spider 四足机器人
 
 ```bash
+# nRF52840 DK（默认）
 make build PROJECT=spider
 make flash-direct PROJECT=spider
+
+# Seeed XIAO BLE / Sense
+make build PROJECT=spider BOARD=xiao_ble
+make flash-uf2 PROJECT=spider BOARD=xiao_ble   # 先双击 RESET 进入 UF2
+
 screen /dev/cu.usbmodem<序列号>1 115200
 ```
 

@@ -1,11 +1,10 @@
 /*
- * spider on nRF52840 DK
+ * spider on Seeed XIAO BLE Sense (nRF52840)
  *
- * PCA9685 挂在 I2C0（默认引脚 P0.26 SDA / P0.27 SCL，无需重映射 pinctrl）。
- * PCA9685 地址 A0-A5 全接 GND => 0x40。
+ * I2C 引脚与 xiao_ble 相同：D4 (SDA)=P0.4, D5 (SCL)=P0.5。
  */
 
-&i2c0 {
+&i2c1 {
 	status = "okay";
 	clock-frequency = <100000>;
 

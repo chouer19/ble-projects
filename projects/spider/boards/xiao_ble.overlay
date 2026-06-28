@@ -1,0 +1,23 @@
+/*
+ * spider on Seeed XIAO BLE (nRF52840)
+ *
+ * PCA9685 挂在板载 I2C1（xiao_i2c = D4/D5）：
+ *   D4 (SDA) = P0.4
+ *   D5 (SCL) = P0.5
+ *
+ * 注意：P0.26 为板载红灯，勿作 I2C SDA。
+ * PCA9685 地址 A0-A5 全接 GND => 0x40。
+ * Shell 控制台走 USB CDC（Type-C），见 boards/xiao_ble.conf。
+ */
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <100000>;
+
+	pca9685: pca9685@40 {
+		compatible = "nxp,pca9685-pwm";
+		reg = <0x40>;
+		#pwm-cells = <2>;
+		status = "okay";
+	};
+};

@@ -2,7 +2,7 @@
 
 > 记录 Mini-Kame 四足机器人固件的功能里程碑、已验证项、已知限制与待办。
 
-最后更新：2026-06-25（SpiderRemote 全动作遥控）
+最后更新：2026-06-28（XIAO BLE Sense 多板型实机验证）
 
 ---
 
@@ -10,10 +10,10 @@
 
 | 项 | 内容 |
 |----|------|
-| 平台 | nRF52840 DK + PCA9685（16 路 PWM）+ 8× 舵机 |
+| 平台 | nRF52840（**DK** 或 **Seeed XIAO BLE/Sense**）+ PCA9685 + 8× 舵机 |
 | 机器人 | 8DOF Mini-Kame 四足（4 腿 × 2 关节） |
-| 固件框架 | Zephyr / NCS v2.7.0 |
-| 交互方式 | UART Shell（115200）+ BLE 遥控（广播名 `SpiderBod`） |
+| 固件框架 | Zephyr / NCS v2.7.0；**同一 `src/` 多板 overlay** |
+| 交互方式 | Shell（DK: UART 115200；XIAO: USB CDC）+ BLE（`SpiderBod`） |
 | 手机 App | iOS/iPad 15.0+，`projects/spider-remote-ios/`（SpiderRemote） |
 | 动作框架 | Kame Motion Framework（离散步态 + FSM，无 IK） |
 | 日常操作 | [operations-guide.md](operations-guide.md) |
@@ -24,7 +24,7 @@
 
 ### 阶段 A：硬件驱动与调试 ✅
 
-- [x] I2C0 + PCA9685 设备树 overlay
+- [x] PCA9685 设备树 overlay（DK I2C0；XIAO I2C1 D4/D5）
 - [x] Zephyr PCA9685 PWM 驱动集成
 - [x] UART Shell：`spider scan/check/servo/angle/multi/all/move/speed/status/off`
 - [x] 50 Hz 插值引擎（全局速度限制 + 指定时长 `move`）
@@ -82,6 +82,15 @@
 - [x] **速度 Tab 自定义滑条**（动作节拍 100–2000 ms；舵机 0–600 °/s）
 - [ ] iPhone 单独验证（可选，与 iPad 同工程）
 - [ ] §9 测试表 T1–T9 逐项记录
+
+### 阶段 F：多板型支持（XIAO BLE） ✅ 实机验证通过
+
+- [x] 同一 `projects/spider` 支持 DK + XIAO，板级差异仅在 `boards/*.overlay`
+- [x] `main.c` I2C 总线跟随 `pca9685` 节点（`DT_BUS`），无硬编码引脚
+- [x] XIAO overlay：`i2c1` + D4/D5；USB CDC Shell（`boards/xiao_ble.conf`）
+- [x] 按板型分目录构建 `build/<BOARD_SLUG>/`，切换 `BOARD` 无需 `clean`
+- [x] `make flash-uf2`（默认 UF2 盘 `XIAO-SENSE`）
+- [x] **XIAO BLE Sense 实机**：UF2 烧录、USB Shell、**iPad SpiderRemote BLE** 与 DK 功能一致
 
 **文档**
 
@@ -150,3 +159,4 @@
 | 2026-06-25 | iOS 最低版本降至 15.0；iPad 真机 BLE 遥控验证通过 |
 | 2026-06-25 | 新增 [operations-guide.md](operations-guide.md) 操作手册 |
 | 2026-06-25 | SpiderRemote 升级：App 覆盖全部 Motion + 速度自定义滑条 |
+| 2026-06-28 | 多板型：XIAO BLE overlay + `make flash-uf2`；XIAO Sense 串口/BLE 实机验证 |

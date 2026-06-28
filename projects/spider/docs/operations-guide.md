@@ -1,7 +1,7 @@
 # spider 操作手册
 
 > Mini-Kame 四足机器人 — 编译、烧录、串口/BLE/手机遥控的**一站式参考**。  
-> 保存当前已验证成果（含 2026-06-25 iPad 真机 BLE 遥控）。
+> 保存当前已验证成果（含 2026-06-25 iPad BLE 遥控、2026-06-28 XIAO BLE Sense）。
 
 ---
 
@@ -10,10 +10,12 @@
 | 能力 | 状态 | 说明 |
 |------|------|------|
 | PCA9685 + 8 路舵机 | ✅ | I2C @ 0x40，50 Hz PWM |
-| UART Shell 调试 | ✅ | 115200，Tab 补全 |
+| UART / USB Shell | ✅ | DK: J-Link 115200；XIAO: USB CDC 115200 |
 | Kame Motion Framework | ✅ | 静态姿态 + 步态 + 单腿动作 |
 | BLE 遥控固件 | ✅ | 广播名 `SpiderBod`，GATT `cmd` 写指令 |
 | iOS/iPad App SpiderRemote | ✅ 实机验证 | iOS 15.0+；**全部 Motion + 两种 speed** |
+| nRF52840 DK 平台 | ✅ 实机验证 | J-Link 烧录 + 串口 + BLE |
+| Seeed XIAO BLE Sense | ✅ 实机验证 | UF2 烧录 + USB Shell + iPad BLE |
 | 串口 + BLE 并行 | ✅ | 后到命令生效；断连 auto stand |
 
 **尚未完成**：阶段 D 步态/三脚架精细调参；§9 完整测试表 T1–T9 逐项书面记录。
@@ -24,12 +26,22 @@
 
 ### 2.1 硬件清单
 
+**nRF52840 DK（默认，已实机验证）**
+
 - nRF52840 DK（J2 J-Link 口接 Mac）
 - PCA9685 模块 @ I2C **0x40**
 - 8× 舵机 + **外部 5–6 V** 舵机电源（勿用 DK 3.3 V 带载）
 - iPhone / **iPad**（iOS 15.0+）用于 BLE 遥控
 
+**Seeed XIAO BLE Sense（nRF52840，已实机验证）**
+
+- Seeed XIAO BLE 或 XIAO BLE Sense
+- 同上 PCA9685 + 舵机 + 外部电源
+- Type-C 接 Mac（Shell：USB CDC；烧录：`make flash-uf2` 或拖放 `zephyr.uf2`）
+
 ### 2.2 接线摘要
+
+**DK（I2C0）**
 
 ```text
 nRF52840 DK           PCA9685
@@ -37,6 +49,17 @@ nRF52840 DK           PCA9685
 外部 5–6 V → V+（舵机电源）
 舵机信号 ← PCA9685 PWM0~15
 ```
+
+**XIAO BLE（I2C1，D4/D5）**
+
+```text
+XIAO BLE              PCA9685
+3V3  → VCC    D4 → SDA    D5 → SCL    GND → GND
+外部 5–6 V → V+
+舵机信号 ← PCA9685 PWM0~15
+```
+
+> XIAO 上 P0.26 为红灯，不可作 I2C SDA。
 
 详见 [kame-servo-calibration.md](kame-servo-calibration.md)、[nrf52840-pca9685-wiring.md](../../../docs/knowledge/nrf52840-pca9685-wiring.md)。
 
@@ -47,7 +70,7 @@ nRF52840 DK           PCA9685
 | 工作区 | `ble-projects` |
 | NCS / Zephyr | v2.7.0 / 3.6.99-ncs2 |
 | Zephyr SDK | 0.16.8 |
-| 板型 | `nrf52840dk/nrf52840` |
+| 板型 | `nrf52840dk/nrf52840`（默认）或 `xiao_ble` |
 | Mac 工具 | `make setup` 初始化 `sdk/`、`toolchains/` |
 
 环境详情：[docs/setup.md](../../../docs/setup.md)
@@ -56,22 +79,41 @@ nRF52840 DK           PCA9685
 
 ## 3. 编译与烧录
 
-在 **ble-projects 根目录**执行：
+在 **ble-projects 根目录**执行。切换 `BOARD` 时使用独立 `build/<板型>/` 目录，**无需 `clean`**。
+
+### 3.1 命令速查
+
+| 目标 | 编译 | 烧录 |
+|------|------|------|
+| nRF52840 DK（默认） | `make build PROJECT=spider` | `make flash-direct PROJECT=spider` |
+| XIAO BLE / Sense | `make build PROJECT=spider BOARD=xiao_ble` | `make flash-uf2 PROJECT=spider BOARD=xiao_ble` |
+
+### 3.2 详细步骤
 
 ```bash
-# 编译 spider 固件
+# --- DK ---
 make build PROJECT=spider
-
-# 烧录（连接 DK J2，打开 SW8 电源）
 make flash-direct PROJECT=spider
+# 多块 DK：cd projects/spider && NRFUTIL_SERIAL=<序列号> make flash-direct
 
-# 多块板时指定序列号
-cd projects/spider && NRFUTIL_SERIAL=<贴纸序列号> make flash-direct
+# --- XIAO BLE / Sense ---
+make build PROJECT=spider BOARD=xiao_ble
+# 1. 快速双击 XIAO RESET，直到 Mac 出现 UF2 磁盘（本机为 XIAO-SENSE）
+# 2. 烧录
+make flash-uf2 PROJECT=spider BOARD=xiao_ble
+# 磁盘名不同：make flash-uf2 PROJECT=spider BOARD=xiao_ble UF2_VOLUME=<磁盘名>
 ```
 
-**产物路径**：`projects/spider/build/zephyr/zephyr.hex`
+**产物路径**（每块板独立 `build/<板型>/`，切换 `BOARD` 无需 `clean`）：
 
-**macOS 烧录失败 EAGAIN**：务必用 `flash-direct`，不要用 `make flash`。
+| 板型 | 路径 |
+|------|------|
+| DK | `projects/spider/build/nrf52840dk_nrf52840/zephyr/zephyr.hex` |
+| XIAO | `projects/spider/build/xiao_ble/zephyr/zephyr.uf2`（及 `.hex`） |
+
+**macOS DK 烧录失败 EAGAIN**：务必用 `flash-direct`，不要用 `make flash`。
+
+**XIAO 勿用 `flash-direct`**：无 J-Link 时用 `flash-uf2`（或手动复制 `.uf2` 到 UF2 磁盘）。
 
 **IDE 代码跳转**：
 
@@ -84,8 +126,10 @@ make compile_commands PROJECT=spider
 ## 4. 串口连接
 
 ```bash
-# macOS（J-Link 虚拟串口，115200）
+# macOS，115200
+# DK：J-Link 虚拟串口（设备名末尾通常为 1）
 screen /dev/cu.usbmodem<序列号>1 115200
+# XIAO：USB CDC（Type-C 直连，同样多为 usbmodem）
 # 退出 screen：Ctrl+A 然后 K，再 Y
 ```
 

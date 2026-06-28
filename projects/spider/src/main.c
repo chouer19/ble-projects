@@ -1,9 +1,10 @@
 /*
  * spider - 串口交互控制 PCA9685 舵机（多通道 + 平滑运动）+ BLE 遥控
  *
- * 接线：I2C0  SDA=P0.26  SCL=P0.27，PCA9685 地址 0x40
+ * I2C 总线与引脚由板级 overlay 定义（DK: i2c0 P0.26/P0.27；XIAO: i2c1 D4/D5）。
+ * PCA9685 地址 0x40。
  *
- * UART shell 命令（vcom0, 115200，支持 Tab 补全）：
+ * Shell 命令（DK: J-Link vcom 115200；XIAO: USB CDC，支持 Tab 补全）：
  *
  *   spider scan                     扫描 I2C 总线
  *   spider check [addr]             读 PCA9685 MODE1/MODE2 寄存器
@@ -36,6 +37,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
+#include <zephyr/devicetree.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/sys/printk.h>
@@ -57,7 +59,8 @@
 
 #define MOTION_TICK_MS 20U
 
-static const struct device *i2c_bus = DEVICE_DT_GET(DT_NODELABEL(i2c0));
+static const struct device *i2c_bus =
+	DEVICE_DT_GET(DT_BUS(DT_NODELABEL(pca9685)));
 
 static int servo_set_target_shell(const struct shell *sh, uint32_t ch,
 				  uint32_t pulse_us, uint16_t step_us)
@@ -119,11 +122,11 @@ static int cmd_scan(const struct shell *sh, size_t argc, char **argv)
 	ARG_UNUSED(argv);
 
 	if (!device_is_ready(i2c_bus)) {
-		shell_error(sh, "i2c0 not ready");
+		shell_error(sh, "I2C bus not ready");
 		return -ENODEV;
 	}
 
-	shell_print(sh, "Scanning I2C0 (SDA=P0.26 SCL=P0.27) 0x03..0x77 ...");
+	shell_print(sh, "Scanning I2C (%s) 0x03..0x77 ...", i2c_bus->name);
 	shell_print(sh, "     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f");
 
 	for (uint8_t base = 0; base <= 0x70; base += 16) {
@@ -497,7 +500,7 @@ SHELL_CMD_ARG_REGISTER(angle, NULL,
 
 SHELL_STATIC_SUBCMD_SET_CREATE(spider_cmds,
 	SHELL_CMD_ARG(scan, NULL,
-		"扫描 I2C0 总线\nUsage: spider scan",
+		"扫描 PCA9685 所在 I2C 总线\nUsage: spider scan",
 		cmd_scan, 1, 0),
 	SHELL_CMD_ARG(check, NULL,
 		"读 PCA9685 MODE 寄存器\nUsage: spider check [addr]",
@@ -540,10 +543,10 @@ SHELL_CMD_REGISTER(spider, &spider_cmds, "PCA9685 舵机控制命令", NULL);
 int main(void)
 {
 	printk("\n*** spider: PCA9685 interactive servo console ***\n");
-	printk("I2C0: SDA=P0.26 SCL=P0.27, expecting PCA9685 @0x40\n");
+	printk("I2C bus %s, expecting PCA9685 @0x40\n", i2c_bus->name);
 
 	if (!device_is_ready(i2c_bus)) {
-		printk("ERROR: i2c0 not ready!\n");
+		printk("ERROR: I2C bus not ready!\n");
 		return 0;
 	}
 
