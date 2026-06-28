@@ -300,45 +300,44 @@ SpiderRemote/
 | 静态动作（Stand、Splay…） | 点按一次 → 发一条 MOTION | `01 id FF` |
 | 循环动作（Forward…） | 点按一次 → **开始循环**（与串口相同） | `01 id FF` |
 | Stop | 点按 → 停止并立正 | `02` |
-| Speed 预设 | 点按 → 设置对应数值 | `10 …` / `11 …` |
+| Speed 预设 / 自定义 | 点按预设或滑条+应用 | `10 …` / `11 …` |
+| Lift / Wave | 点按带腿参数 | `01 02 leg` / `01 0F leg` |
 
 **不做**按住走、松手停。循环动作需用户再点 Stop 或切换其他动作。
 
-### 6.4 UI 线框（一期）
+### 6.4 UI 线框（当前实现）
 
-**Tab 1 — 遥控**
+**Tab 1 — 遥控**（覆盖 §5.4 全部 Motion）
 
 ```text
 ┌─────────────────────────────────┐
 │  SpiderBod          ● 已连接     │
+│  [ ■ Stop（恢复立正） ]          │
 ├─────────────────────────────────┤
-│           [ Stand ]             │
-│  [Turn L]  [■ Stop]  [Turn R]   │
-│          [ Forward ]            │
-│         [ Backward ]            │
-│   [Spin L]        [Spin R]      │
-│           [ Splay ]             │
-├─────────────────────────────────┤
-│  更多 ▼ （二期：nod/shake/lift） │
+│ 姿态    [ Stand ] [ Splay ]      │
+│ 行走    Fwd / Back / Turn L·R / Spin L·R（循环）│
+│ 趴下    Front / Rear / Full Down │
+│ 机身    Nod / Shake / Roll（循环）│
+│ 抬腿    Lift L1 R1 L2 R2         │
+│ 招手    Wave L1 R1 L2 R2（循环） │
 └─────────────────────────────────┘
 ```
 
 **Tab 2 — 速度**
 
-两种 speed 分开展示，文案与串口一致：
-
 ```text
 动作节拍（等同串口 speed）
   当前：500 ms
   [ 慢 300 ] [ 中 500 ] [ 快 800 ]
+  滑条 100–2000 ms  → [ 应用 ]
 
 舵机转速（等同 spider speed）
   当前：240 °/s
   [ 慢 120 ] [ 中 240 ] [ 快 360 ]
+  滑条 0–600 °/s    → [ 应用 ]
 ```
 
-- 一期用**预设按钮**即可，与「手机发指令设置」一致；二期可加 Stepper 自定义数值。
-- 预设值写入固件前可通过串口 `speed` / `spider speed` 实机标定，再定 App 默认值。
+**仍仅串口**：`angle`、`spider servo/multi/scan` 等调试与标定命令（BLE 协议未包含）。
 
 ### 6.5 BLE 流程
 
@@ -392,16 +391,14 @@ CONFIG_BT_GATT_DYNAMIC_DB=y
 
 `make build PROJECT=spider` 已通过。
 
-### 阶段 2 — iOS/iPad App 最小可用 ✅（2026-06-25）
+### 阶段 2 — iOS/iPad App ✅（2026-06-25）
 
 工程路径：`projects/spider-remote-ios/`。
 
 1. ✅ Xcode 工程 + CoreBluetooth 连接 `SpiderBod`
-2. ✅ RemoteView：Stand / Forward / Backward / Stop / Turn / Spin / Splay
-3. ✅ SpeedSettingsView：两种 speed 预设按钮
-4. ✅ **iPad 真机联调通过**（遥控与速度预设效果良好）
-
-最低系统 **iOS 15.0+**（含 iPad；UI 使用 `NavigationView`）。
+2. ✅ RemoteView：全部 Motion + Stop（分区 UI）
+3. ✅ SpeedSettingsView：预设 + 滑条自定义
+4. ✅ **iPad 真机联调通过**
 
 ### 阶段 3 — 完善与文档 ✅
 
@@ -433,7 +430,6 @@ CONFIG_BT_GATT_DYNAMIC_DB=y
 |----|------|
 | Notify `status` | 上报当前 motion_id、delay、servo_speed |
 | 配对 / PIN | 防误连他人机器人 |
-| 自定义 speed 数值输入 | Stepper 或文本框 |
 | `angle` / 标定类命令走 BLE | 仍建议仅串口 |
 
 ---

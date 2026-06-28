@@ -13,7 +13,7 @@
 | UART Shell 调试 | ✅ | 115200，Tab 补全 |
 | Kame Motion Framework | ✅ | 静态姿态 + 步态 + 单腿动作 |
 | BLE 遥控固件 | ✅ | 广播名 `SpiderBod`，GATT `cmd` 写指令 |
-| iOS/iPad App SpiderRemote | ✅ 实机验证 | iOS 15.0+，CoreBluetooth |
+| iOS/iPad App SpiderRemote | ✅ 实机验证 | iOS 15.0+；**全部 Motion + 两种 speed** |
 | 串口 + BLE 并行 | ✅ | 后到命令生效；断连 auto stand |
 
 **尚未完成**：阶段 D 步态/三脚架精细调参；§9 完整测试表 T1–T9 逐项书面记录。
@@ -209,11 +209,27 @@ BLE advertising started (connectable)
 
 **App 三 Tab**：
 
-1. **遥控** — Stand / Forward / Backward / Turn / Spin / Splay / Stop（点按发一条）
-2. **速度** — 动作节拍 300/500/800 ms；舵机转速 120/240/360 °/s
+1. **遥控** — 全部 16 种 Motion + Stop（姿态 / 行走 / 趴下 / 机身 / 抬腿×4 / 招手×4）
+2. **速度** — 预设 + 滑条自定义（动作节拍 100–2000 ms；舵机 0–600 °/s）
 3. **连接** — 扫描并连接 `SpiderBod`
 
-首次安装教程：[iOS 入门教程](../../spider-remote-ios/docs/ios-getting-started.md)
+> 舵机标定、`angle`、I2C 调试等仍仅串口；BLE 覆盖全部 Motion 与两种 speed。
+
+### 7.4 App 遥控 ↔ 串口命令对照
+
+| App 分区 / 按钮 | 等价串口 | 循环 |
+|-----------------|----------|------|
+| Stand | `stand` | 否 |
+| Splay | `splay` | 否 |
+| Forward / Backward | `forward` / `backward` | 是 |
+| Turn L / R | `turn_left` / `turn_right` | 是 |
+| Spin L / R | `spin_left` / `spin_right` | 是 |
+| Front / Rear / Full Down | `front_down` / `rear_down` / `full_down` | 否 |
+| Nod / Shake / Roll | `nod` / `shake` / `roll` | 是 |
+| Lift L1…R2 | `lift L1` … | 否 |
+| Wave L1…R2 | `wave L1` … | 是 |
+| Stop | `stop` | — |
+| 速度预设 / 滑条 | `speed <ms>` / `spider speed <deg/s>` | — |
 
 ---
 
@@ -291,5 +307,6 @@ stop                 # 串口应立即打断
 | 日期 | 项目 | 结果 |
 |------|------|------|
 | 2026-06-25 | iPad + SpiderRemote 连接 SpiderBod 遥控 | ✅ 效果良好（Stand / 步态 / Stop / 速度预设） |
+| 2026-06-25 | SpiderRemote 全 Motion + 速度滑条 | ✅ App 覆盖 BLE 全部遥控能力 |
 | — | 串口 §3.2 全量回归 | 待逐项记录 |
 | — | ble-remote-design §9 T1–T9 | 待逐项记录 |

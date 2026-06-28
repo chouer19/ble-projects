@@ -242,30 +242,42 @@ App 底部有三个 Tab：**遥控**、**速度**、**连接**。
 - **循环动作**（Forward 等）：点一次开始循环，需再点 **Stop** 或切换其他动作才会停
 - **不会**「按住走、松手停」
 
-### 7.2 遥控 Tab
+### 7.2 遥控 Tab（全部 Motion）
 
-| 按钮 | 等价串口 | BLE 帧（hex） |
-|------|----------|---------------|
-| Stand | `stand` | `01 00 FF` |
-| Forward | `forward` | `01 06 FF` |
-| Backward | `backward` | `01 07 FF` |
-| Turn L / R | `turn_left` / `turn_right` | `01 08 FF` / `01 09 FF` |
-| Spin L / R | `spin_left` / `spin_right` | `01 0A FF` / `01 0B FF` |
-| Splay | `splay` | `01 01 FF` |
-| ■ Stop | `stop` | `02` |
+界面按分区展示，覆盖固件 **16 种 Motion** + **Stop**：
 
-未连接时按钮为灰色不可点；请先完成 §6 连接。
+| 分区 | 按钮 | 等价串口 | 循环 |
+|------|------|----------|------|
+| 姿态 | Stand、Splay | `stand` / `splay` | 否 |
+| 行走 | Forward、Backward、Turn L/R、Spin L/R | 同名顶层命令 | 是 |
+| 趴下 | Front Down、Rear Down、Full Down | `front_down` 等 | 否 |
+| 机身 | Nod、Shake、Roll | `nod` / `shake` / `roll` | 是 |
+| 抬腿 | Lift L1 / R1 / L2 / R2 | `lift L1` 等 | 否 |
+| 招手 | Wave L1 / R1 / L2 / R2 | `wave L1` 等 | 是 |
+| 全局 | ■ Stop | `stop` | — |
+
+常用 BLE 帧示例：
+
+| 操作 | Hex |
+|------|-----|
+| Stand | `01 00 FF` |
+| Forward | `01 06 FF` |
+| Lift L1 | `01 02 00` |
+| Wave R2 | `01 0F 03` |
+| Stop | `02` |
+
+未连接时按钮为灰色；请先完成 §6 连接。完整对照见 [operations-guide §7.4](../../spider/docs/operations-guide.md)。
 
 ### 7.3 速度 Tab
 
 两种 speed **分开**，与串口一致：
 
-| 区域 | 等价串口 | 预设 |
-|------|----------|------|
-| 动作节拍 | `speed <ms>` | 慢 300 / 中 500 / 快 800 |
-| 舵机转速 | `spider speed <deg/s>` | 慢 120 / 中 240 / 快 360 |
+| 区域 | 等价串口 | 预设 | 自定义 |
+|------|----------|------|--------|
+| 动作节拍 | `speed <ms>` | 300 / 500 / 800 ms | 滑条 100–2000 ms → **应用** |
+| 舵机转速 | `spider speed <deg/s>` | 120 / 240 / 360 °/s | 滑条 0–600 °/s → **应用** |
 
-点预设后会立即写入固件；界面上的「当前：xxx」在 App 本地更新（固件一期不回传确认）。
+点预设或「应用」后立即写入固件；界面「当前：xxx」为 App 本地记录（固件不回传确认）。
 
 ---
 

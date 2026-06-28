@@ -54,7 +54,7 @@ open projects/spider-remote-ios/SpiderRemote.xcodeproj
 |----------|------|
 | UART Shell | `stand` / `forward` / `stop` / `speed` / `spider scan` … |
 | BLE | 广播名 `SpiderBod`，GATT 写 cmd 帧 |
-| SpiderRemote App | iOS/iPad 15.0+，点按遥控（**iPad 已实机验证**） |
+| SpiderRemote App | iOS/iPad 15.0+；**全部 Motion + 两种 speed**（iPad 已验证） |
 
 **一站式操作手册**：[projects/spider/docs/operations-guide.md](projects/spider/docs/operations-guide.md)
 

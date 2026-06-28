@@ -5,41 +5,30 @@ struct RemoteView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 connectionBadge
 
-                motionButton("Stand") {
-                    ble.sendMotion(.stand)
-                }
+                stopBar
 
-                HStack(spacing: 12) {
-                    motionButton("Turn L") { ble.sendMotion(.turnLeft) }
-                    stopButton
-                    motionButton("Turn R") { ble.sendMotion(.turnRight) }
-                }
+                categorySection(.posture, columns: 2)
+                categorySection(.gait, columns: 2)
+                categorySection(.lieDown, columns: 1)
+                categorySection(.body, columns: 3)
+                legSection(
+                    title: SpiderMotionCategory.lift.rawValue,
+                    hint: "静态；先进三脚架再抬腿",
+                    motions: SpiderMotionDef.liftByLeg
+                )
+                legSection(
+                    title: SpiderMotionCategory.wave.rawValue,
+                    hint: "循环；Stop 恢复立正",
+                    motions: SpiderMotionDef.waveByLeg
+                )
 
-                motionButton("Forward") {
-                    ble.sendMotion(.forward)
-                }
-
-                motionButton("Backward") {
-                    ble.sendMotion(.backward)
-                }
-
-                HStack(spacing: 12) {
-                    motionButton("Spin L") { ble.sendMotion(.spinLeft) }
-                    motionButton("Spin R") { ble.sendMotion(.spinRight) }
-                }
-
-                motionButton("Splay") {
-                    ble.sendMotion(.splay)
-                }
-
-                Text("点按发送一条命令；循环动作需再点 Stop 或切换动作。")
+                Text("点按发送一条命令。标「循环」的动作需 Stop 或切换其他动作停止。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 8)
             }
             .padding()
         }
@@ -62,11 +51,11 @@ struct RemoteView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
-    private var stopButton: some View {
+    private var stopBar: some View {
         Button {
             ble.sendStop()
         } label: {
-            Text("■ Stop")
+            Text("■ Stop（恢复立正）")
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -76,14 +65,68 @@ struct RemoteView: View {
         .disabled(ble.state != .connected)
     }
 
-    private func motionButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func categorySection(_ category: SpiderMotionCategory, columns: Int) -> some View {
+        let motions = SpiderMotionDef.inCategory(category)
+        return motionPanel(title: category.rawValue) {
+            LazyVGrid(columns: gridColumns(columns), spacing: 10) {
+                ForEach(motions) { motion in
+                    motionButton(motion)
+                }
+            }
+        }
+    }
+
+    private func legSection(title: String, hint: String, motions: [SpiderMotionDef]) -> some View {
+        motionPanel(title: title, subtitle: hint) {
+            LazyVGrid(columns: gridColumns(4), spacing: 10) {
+                ForEach(motions) { motion in
+                    motionButton(motion)
+                }
+            }
+        }
+    }
+
+    private func motionPanel<Content: View>(title: String,
+                                            subtitle: String? = nil,
+                                            @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func motionButton(_ motion: SpiderMotionDef) -> some View {
+        Button {
+            ble.sendMotion(motion.motionID, leg: motion.legID)
+        } label: {
+            VStack(spacing: 4) {
+                Text(motion.title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.center)
+                if motion.isCyclic {
+                    Text("循环")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
         }
         .buttonStyle(.bordered)
         .disabled(ble.state != .connected)
+    }
+
+    private func gridColumns(_ count: Int) -> [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 10), count: count)
     }
 }

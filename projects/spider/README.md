@@ -114,6 +114,8 @@ PCA9685 地址 A0-A5 全接 GND → **0x40**。通道映射见 [docs/kame-servo-
 | Characteristic `cmd` | `A0010002-0000-1000-8000-00805F9B34FB` |
 | 写入方式 | Write Without Response（1–3 字节小端帧） |
 
+**SpiderRemote App** 已通过 BLE 覆盖全部 **16 种 Motion** + Stop，以及两种 speed（预设 + 自定义）。`angle` / `spider` 调试命令仍仅串口。
+
 常用 hex（nRF Connect 自测）：
 
 | 操作 | Hex |
@@ -240,7 +242,7 @@ projects/spider-remote-ios/            # iOS 遥控 App
 - ✅ PCA9685 驱动 + Shell 调试完整可用
 - ✅ 8 路舵机标定完成
 - ✅ Kame Motion Framework：静态姿态 + 步态 + 单腿动作
-- ✅ 固件 BLE 遥控（`SpiderBod`）+ SpiderRemote iOS/iPad App
+- ✅ 固件 BLE 遥控（`SpiderBod`）+ SpiderRemote 全 Motion / 全 speed
 - ✅ **iPad 真机 BLE 遥控验证通过**（2026-06-25）
 - 🔄 实机步态/三脚架参数微调进行中
 - ⏳ §9 完整测试表 T1–T9 书面记录

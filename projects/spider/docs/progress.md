@@ -2,7 +2,7 @@
 
 > 记录 Mini-Kame 四足机器人固件的功能里程碑、已验证项、已知限制与待办。
 
-最后更新：2026-06-25
+最后更新：2026-06-25（SpiderRemote 全动作遥控）
 
 ---
 
@@ -78,6 +78,8 @@
 - [x] SwiftUI + CoreBluetooth 工程（iOS 15.0+）
 - [x] RemoteView / SpeedSettingsView / ConnectionView
 - [x] **iPad 真机 BLE 遥控验证**（2026-06-25，效果良好）
+- [x] **全 Motion 遥控**（16 种 + Stop；分区 UI：姿态/行走/趴下/机身/抬腿/招手）
+- [x] **速度 Tab 自定义滑条**（动作节拍 100–2000 ms；舵机 0–600 °/s）
 - [ ] iPhone 单独验证（可选，与 iPad 同工程）
 - [ ] §9 测试表 T1–T9 逐项记录
 
@@ -122,8 +124,6 @@
 ### 中期
 
 - [ ] BLE Notify 状态回传
-- [ ] App 更多动作按钮（nod / shake / lift 等）
-- [ ] App 自定义 speed 数值输入
 - [ ] 动作序列脚本化
 - [ ] 低功耗待机（舵机 off + 唤醒恢复 stand）
 
@@ -149,3 +149,4 @@
 | 2026-06-25 | 固件 BLE + `spider_control` 重构；iOS SpiderRemote 首版 |
 | 2026-06-25 | iOS 最低版本降至 15.0；iPad 真机 BLE 遥控验证通过 |
 | 2026-06-25 | 新增 [operations-guide.md](operations-guide.md) 操作手册 |
+| 2026-06-25 | SpiderRemote 升级：App 覆盖全部 Motion + 速度自定义滑条 |
