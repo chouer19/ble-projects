@@ -1,0 +1,90 @@
+# Hexapod — collision / servo-protection constraints (command space)
+#
+# Purpose: prevent adjacent-leg J1 clashes and J2/J3 belly hits that stall servos.
+# Thresholds marked null are measured on hardware, then filled in.
+#
+# Angle conventions: see docs/joints.md and config/body_geometry.yaml
+#   J1 home 90°, + = CCW about +Z
+#   J2 home 180° (femur up), + = belly → overhead (so toward belly = decreasing J2)
+#   J3 home 125°, + = raised → folded against femur
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# 1) Adjacent J1 — coxae swinging toward each other
+# ---------------------------------------------------------------------------
+# Legs 1..6 in CCW order. Adjacent pairs:
+#   (1,2) (2,3) (3,4) (4,5) (5,6) (6,1)
+#
+# Body-frame coxa yaw (deg):
+#   φ_i = mount_yaw_i + (J1_i - 90)
+#   mount_yaw_i = atan2(J1_y, J1_x)  [see mount_yaw_deg]
+#
+# Closing the gap between CCW-neighbors (i → i+1):
+#   leg i    swings CCW  (J1_i ↑)
+#   leg i+1  swings CW   (J1_{i+1} ↓)
+#   closing_deg ≈ (J1_i - 90) + (90 - J1_{i+1}) = J1_i - J1_{i+1}
+#
+# Soft constraint (same form for every adjacent pair):
+#   J1_i - J1_{i+1}  ≤  j1_adjacent_max_closing_deg
+# At home (90,90): left side = 0 (fully open for this metric).
+j1_adjacent:
+  pairs:
+    - [1, 2]
+    - [2, 3]
+    - [3, 4]
+    - [4, 5]
+    - [5, 6]
+    - [6, 1]
+  # Max allowed (J1_i - J1_next) before coxae clash — measure on robot
+  max_closing_deg: null
+  # Optional symmetric floor (usually not needed if range is 0..180)
+  # min_closing_deg: -180
+  mount_yaw_deg:
+    1: 29.624
+    2: 90.0
+    3: 150.376
+    4: -150.376
+    5: -90.0
+    6: -29.624
+  # Equivalent check in body frame (optional implementation):
+  #   φ_i = mount_yaw_i + (J1_i - 90)
+  #   sep = wrap_to_180(φ_next - φ_i)   # CCW gap from i to next
+  #   sep >= min_coxa_separation_deg
+  min_coxa_separation_deg: null
+
+# ---------------------------------------------------------------------------
+# 2) J2 + J3 — leg folding into the belly (per leg, identical structure)
+# ---------------------------------------------------------------------------
+# Toward belly:
+#   J2 decreases (180 → 0)
+#   J3 increases (toward fold / abdomen, depending on tip bend)
+#
+# Express as a forbidden region in the (J2, J3) plane.
+# Start with independent soft limits, then add a coupled half-plane once measured.
+j2_j3_belly:
+  # Independent soft limits (fill after sweep tests)
+  j2_min_deg: null          # femur must not go below this toward belly
+  j3_max_deg: null          # tibia must not fold past this toward belly/body
+  # Coupled half-plane (recommended once calibrated), all angles in deg:
+  #   a * J2 + b * J3 >= c
+  # Example shape (NOT calibrated): 1*J2 + 0.5*J3 >= 200
+  # Meaning: when J3 is larger (more folded), J2 cannot be as small.
+  coupled:
+    enabled: false
+    a_J2: 1.0
+    b_J3: 0.0
+    c_min: null
+  # Applies to each leg independently
+  per_leg: true
+
+# ---------------------------------------------------------------------------
+# Runtime policy (firmware / controller)
+# ---------------------------------------------------------------------------
+policy:
+  # reject command | clamp to nearest safe | scale whole-body toward home
+  on_violation: clamp
+  # Keep a margin inside the hard geometric clash
+  margin_deg: 3
+  # Never command into install endstops either
+  respect_joint_range: true

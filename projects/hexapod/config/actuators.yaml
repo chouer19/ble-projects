@@ -1,0 +1,32 @@
+# Hexapod actuators — Tower Pro MG996R (all 18 joints)
+
+version: 1
+
+servo:
+  model: MG996R
+  count: 18          # 6 legs × 3 (J1, J2, J3 per leg)
+  placement: identical_on_all_joints
+
+  # Project joint range (see body_geometry.yaml); may differ from stock ~120°
+  commanded_range_deg: [0, 180]
+
+  # Typical manufacturer specs (no-load / stall; verify on your batch)
+  electrical:
+    voltage_v: [4.8, 7.2]
+    recommended_v: 6.0
+    stall_current_a: 2.5        # per servo @ 6V, approximate
+
+  mechanical:
+    stall_torque_kg_cm:
+      at_4_8v: 9.4
+      at_6_0v: 11.0
+    speed_sec_per_60deg:
+      at_4_8v: 0.17
+      at_6_0v: 0.14
+    weight_g: 55
+    size_mm: [40.7, 19.7, 42.9]   # L × W × H (typical)
+
+  notes:
+    - Metal gear, dual ball bearing; high stall current — size BEC/power accordingly.
+    - Avoid holding against hard stops (adjacent J1 clash, belly hit); use collision limits.
+    - 18× simultaneous stall can exceed 40 A; never design for continuous stall on all servos.

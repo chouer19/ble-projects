@@ -1,0 +1,119 @@
+# Hexapod — body geometry (spider-inspired 6-leg, 3 motors/leg)
+#
+# Frame (body):
+#   Origin = geometric center
+#   +X forward, +Y left, +Z up  (right-handed)
+#
+# Legs 1..6: from +X toward +Y (CCW about +Z)
+#   1 front-left, 2 mid-left, 3 rear-left,
+#   4 rear-right, 5 mid-right, 6 front-right
+#
+# Symmetry:
+#   X-mirror (y → -y): 1↔6, 2↔5, 3↔4
+#   Y-mirror (x → -x): 1↔3, 6↔4 ; legs 2,5 on the Y axis
+#
+# Joints: J1, J2, J3 only (see docs/joints.md)
+# Links:  coxa (基节) → femur (大腿) → tibia (小腿) → tip (足尖)
+#
+# home = power-on rest pose (合理静止状态), not an install endstop.
+#
+# Units: meters, degrees.
+
+version: 4
+
+# ---------------------------------------------------------------------------
+# Body layout — measured distances → half-sizes → J1 positions
+# ---------------------------------------------------------------------------
+measured:
+  D_25: 0.213   # |J1_2 − J1_5| along Y
+  D_16: 0.116   # |J1_1 − J1_6| along Y
+  D_34: 0.116   # |J1_3 − J1_4| along Y
+  D_13: 0.204   # |J1_1 − J1_3| along X
+  D_46: 0.204   # |J1_4 − J1_6| along X
+
+derived:
+  X_h: 0.102    # D_13 / 2
+  Y_m: 0.1065   # D_25 / 2
+  Y_c: 0.058    # D_16 / 2
+  Z_h: 0.0      # J1 and J2 lie in z = 0
+
+# J1 origins (fixed on body). Z = 0.
+j1:
+  1: { x: 0.102,  y: 0.058,  z: 0.0 }   # (+X_h, +Y_c, 0)
+  2: { x: 0.0,    y: 0.1065, z: 0.0 }   # (0, +Y_m, 0)
+  3: { x: -0.102, y: 0.058,  z: 0.0 }   # (−X_h, +Y_c, 0)
+  4: { x: -0.102, y: -0.058, z: 0.0 }   # (−X_h, −Y_c, 0)
+  5: { x: 0.0,    y: -0.1065, z: 0.0 }  # (0, −Y_m, 0)
+  6: { x: 0.102,  y: -0.058, z: 0.0 }   # (+X_h, −Y_c, 0)
+
+# ---------------------------------------------------------------------------
+# Links (rigid)
+# ---------------------------------------------------------------------------
+#   L_c : J1 → J2  (coxa); along origin→J1 at home (J1 = 90°)
+#   L_f : J2 → J3  (femur); along +Z at home (J2 = 180°)
+#   L_t : J3 → tip (tibia; tip bent for grip — bend TBD)
+links:
+  L_c: 0.04
+  L_f: 0.085
+  L_t: 0.165
+
+# ---------------------------------------------------------------------------
+# Joint angle model (all servos 0° .. 180°)
+# ---------------------------------------------------------------------------
+joints:
+  per_leg: 3
+  range_deg: [0, 180]
+
+  J1:
+    # +angle = CCW about body +Z (+X → +Y)
+    # At 90°: coxa along origin → J1 (radial outward)
+    sense: ccw_about_plus_z
+    home_deg: 90
+
+  J2:
+    # +angle: under-belly → overhead
+    # At 180°: femur along +Z (straight up)
+    # At 0°: femur toward under-belly
+    sense: belly_to_overhead
+    home_deg: 180
+
+  J3:
+    # 0°   = tibia raised to highest
+    # 180° = tibia folded against femur (contact limit)
+    # 125° = tip–J3 line roughly ⊥ femur (nominal home; per-leg cal later)
+    sense: raise_to_fold
+    install_min_deg: 0
+    install_max_deg: 180
+    home_deg: 125
+
+# ---------------------------------------------------------------------------
+# home = 开机静止姿态（亦便于 FK：J1 外展 + J2 大腿朝天 + J3 tip–J3⊥大腿）
+# 六腿标称角相同；J3 等可后期分腿标定覆盖
+# ---------------------------------------------------------------------------
+home:
+  meaning: power_on_rest
+  J1_deg: 90              # 基节沿原点→J1 径向向外
+  J2_deg: 180             # 大腿沿 +Z 竖直向上
+  J3_deg: 125             # tip–J3 连线大致 ⊥ 大腿（标称）
+
+# ---------------------------------------------------------------------------
+# Joint origins at home (J1=90°, J2=180°); tip depends on J3=125° + tip bend
+# ---------------------------------------------------------------------------
+#   û_i  = j1_i / |j1_i|
+#   J2_i = j1_i + L_c * û_i
+#   J3_i = J2_i + (0, 0, L_f)
+home_geometry:
+  j2:
+    1: { x: 0.136772, y: 0.077772, z: 0.0 }
+    2: { x: 0.0,      y: 0.1465,   z: 0.0 }
+    3: { x: -0.136772, y: 0.077772, z: 0.0 }
+    4: { x: -0.136772, y: -0.077772, z: 0.0 }
+    5: { x: 0.0,      y: -0.1465,  z: 0.0 }
+    6: { x: 0.136772, y: -0.077772, z: 0.0 }
+  j3:
+    1: { x: 0.136772, y: 0.077772, z: 0.085 }
+    2: { x: 0.0,      y: 0.1465,   z: 0.085 }
+    3: { x: -0.136772, y: 0.077772, z: 0.085 }
+    4: { x: -0.136772, y: -0.077772, z: 0.085 }
+    5: { x: 0.0,      y: -0.1465,  z: 0.085 }
+    6: { x: 0.136772, y: -0.077772, z: 0.085 }
